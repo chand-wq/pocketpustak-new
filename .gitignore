@@ -1,0 +1,13 @@
+# Python Virtual Environment
+venv/
+
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Sensitive local files and credentials
+.env
+svaraflow-c2afe9f0fb69.json
+
+# Operating System temporary files
+.DS_Store

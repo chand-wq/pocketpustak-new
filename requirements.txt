@@ -1,0 +1,5 @@
+Flask
+razorpay
+Flask-Cors
+google-cloud-texttospeech
+google-cloud-storage  
