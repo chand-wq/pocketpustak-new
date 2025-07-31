@@ -2,4 +2,5 @@ Flask
 razorpay
 Flask-Cors
 google-cloud-texttospeech
-google-cloud-storage  
+google-cloud-storage
+google-cloud-speech
