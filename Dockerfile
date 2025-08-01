@@ -6,25 +6,25 @@ FROM python:3.9-slim
 # This is where your code will live.
 WORKDIR /app
 
-# Set environment variables for Gunicorn, which is used to run the app.
-ENV PORT 8080
+# Set environment variables for the port Gunicorn will listen on.
+# Cloud Run automatically sets the PORT environment variable,
+# so we will use it in our command.
+# ENV PORT 8080 # This line is often not needed as Cloud Run provides it.
 
 # Copy the requirements file into the container first.
 # This allows Docker to cache the layer and reuse it if requirements.txt hasn't changed.
 COPY requirements.txt .
 
 # Install dependencies from requirements.txt.
-# We've added gunicorn here.
+# Ensure gunicorn is listed in this file.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application code into the container.
 # This includes app.py, templates, and any static files.
 COPY . .
 
-# Expose the port that the container listens on.
-EXPOSE 8080
-
 # The command to run the application using Gunicorn.
-# The `--bind 0.0.0.0:$PORT` part is crucial for Cloud Run/Container environments.
-# It tells Gunicorn to listen on all network interfaces at the port specified by the PORT environment variable.
-CMD ["python", "app.py"]
+# The `--bind` part is crucial for Cloud Run. It tells Gunicorn to listen on
+# all network interfaces at the port specified by the PORT environment variable.
+# 'app:app' means 'run the callable object named "app" from the file named "app.py"'.
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
