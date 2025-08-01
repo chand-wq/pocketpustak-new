@@ -16,8 +16,6 @@ import dotenv
 # We check for its absence to load the .env file only when running locally.
 if os.environ.get('K_SERVICE') is None:
     dotenv.load_dotenv()
-    # Note: On Cloud Run, this will not be executed.
-    # We use logger for consistency.
     logging.info("Running locally - .env file loaded.")
 
 
@@ -45,13 +43,6 @@ except Exception as e:
 # --- Google Cloud Storage & STT Configuration ---
 GCS_BUCKET_NAME = 'donotdeletechand1'
 USER_DATA_FOLDER = 'user_data'
-
-try:
-    stt_client = speech.SpeechClient()
-    logger.info("Google Cloud Speech-to-Text client initialized.")
-except Exception as e:
-    logger.error(f"Error initializing Google Cloud STT client. Please check authentication. Details: {e}", exc_info=True)
-    stt_client = None
 
 try:
     storage_client = storage.Client()
