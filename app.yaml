@@ -1,0 +1,6 @@
+runtime: python39  # Or python38, python310, etc.
+entrypoint: gunicorn --bind :$PORT app:app  # Assuming your Flask app is named 'app'
+
+handlers:
+- url: /.*
+  script: auto

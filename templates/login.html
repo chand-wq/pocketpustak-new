@@ -58,6 +58,9 @@
     </div>
 
     <script>
+        // Set the same base URL for all pages
+        const BASE_URL = 'https://pocketpustak-app-32681899180.asia-south1.run.app';
+
         function handleCredentialResponse(response) {
             if (response.credential) {
                 const payload = jwtDecode(response.credential);
@@ -68,8 +71,8 @@
                     photoURL: payload.picture,
                     isLoggedIn: true
                 }));
-                // IMPORTANT: Change to absolute path now that Flask serves frontend
-                window.location.href = "/stories9.html"; 
+                // Navigate to the correct, absolute path
+                window.location.href = `${BASE_URL}/stories9.html`; 
             } else {
                 alert("Sign-in failed. Please try again.");
                 console.error("Google Sign-in failed: No credential received.");
@@ -86,14 +89,14 @@
                 isLoggedIn: true
             };
             localStorage.setItem('user', JSON.stringify(sampleUser));
-            // IMPORTANT: Change to absolute path now that Flask serves frontend
-            window.location.href = "/stories9.html"; 
+            // Navigate to the correct, absolute path
+            window.location.href = `${BASE_URL}/stories9.html`; 
         });
 
         const user = JSON.parse(localStorage.getItem('user'));
         if (user && user.isLoggedIn) {
-            // IMPORTANT: Change to absolute path now that Flask serves frontend
-            window.location.href = "/stories9.html";
+            // Navigate to the correct, absolute path
+            window.location.href = `${BASE_URL}/stories9.html`;
         }
 
         function jwtDecode(token) {
