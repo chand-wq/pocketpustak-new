@@ -1,3 +1,4 @@
+# app.py
 import os
 import json
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -6,45 +7,49 @@ from google.cloud import speech_v1p1beta1 as speech
 from google.cloud import storage
 import razorpay
 import traceback
-from urllib.parse import unquote # Import unquote for URL decoding
+from urllib.parse import unquote
+import logging # <--- NEW: ADD THIS IMPORT
+
+# --- Configure logging at the top of your file ---
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # --- Flask App Initialization ---
 app = Flask(__name__,
             template_folder='templates',
             static_folder='static')
-CORS(app) # For development, allows all origins. In production, restrict to your frontend domain.
+CORS(app)
 
 # --- Razorpay Configuration ---
-# IMPORTANT: DO NOT hardcode sensitive keys in production. Use environment variables.
-RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_WprqVAEObL47N8') # Default for testing
-RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'ry9HrZPWRGdxKWGCHCZA0TqO') # Default for testing
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_WprqVAEObL47N8')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'ry9HrZPWRGdxKWGCHCZA0TqO')
 
 try:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-    print("Razorpay client initialized.")
+    logger.info("Razorpay client initialized.")
 except Exception as e:
-    print(f"Error initializing Razorpay client. Please check your keys: {e}")
+    logger.error(f"Error initializing Razorpay client. Please check your keys: {e}", exc_info=True)
     razorpay_client = None
 
-# --- Google Cloud Storage Configuration ---
+# --- Google Cloud Storage & STT Configuration ---
 GCS_BUCKET_NAME = 'donotdeletechand1'
 USER_DATA_FOLDER = 'user_data'
 
 try:
     stt_client = speech.SpeechClient()
-    print("Google Cloud Speech-to-Text client initialized.")
+    logger.info("Google Cloud Speech-to-Text client initialized.")
 except Exception as e:
-    print("Error initializing Google Cloud STT client. Please check authentication.")
-    print(f"Details: {e}")
+    logger.error(f"Error initializing Google Cloud STT client. Please check authentication. Details: {e}", exc_info=True)
     stt_client = None
 
 try:
+    # This correctly uses Application Default Credentials on Cloud Run
     storage_client = storage.Client()
     gcs_bucket = storage_client.bucket(GCS_BUCKET_NAME)
-    print(f"Google Cloud Storage client initialized for bucket: {GCS_BUCKET_NAME}")
+    logger.info(f"Google Cloud Storage client initialized for bucket: {GCS_BUCKET_NAME}")
 except Exception as e:
-    print("Error initializing Google Cloud Storage client. Please check authentication and bucket name.")
-    print(f"Details: {e}")
+    # CRITICAL CHANGE: This will capture the full stack trace and exception details
+    logger.error("Error initializing Google Cloud Storage client. Please check authentication and bucket name.", exc_info=True)
     storage_client = None
     gcs_bucket = None
 
@@ -61,7 +66,6 @@ def convert_to_gcs_uri(http_url):
     return None
 
 # --- SERVER-SIDE "DATABASE" (IN REAL APP: USE A PROPER DB) ---
-# This is where your sensitive URLs (audioSrc) and full transcripts are securely stored.
 SERVER_BOOK_DATABASE = {
     101: {
         "id": 101,
@@ -71,7 +75,7 @@ SERVER_BOOK_DATABASE = {
         "category": "Self-Help",
         "rating": 4.8,
         "cover": "https://c4.wallpaperflare.com/wallpaper/102/104/18/woody-in-toy-story-3-hd-toy-story-3-woody-illustration-wallpaper-preview.jpg",
-        "audioSrc": "https://storage.googleapis.com/donotdeletechand1/telugu-story.mp3", # This is the sensitive URL
+        "audioSrc": "https://storage.googleapis.com/donotdeletechand1/telugu-story.mp3",
         "textSummary": "కడప ఫ్యాక్షన్ కథలు అంటే రాయలసీమలో, ముఖ్యంగా కడప ప్రాంతంలో తరతరాలుగా కుటుంబాల మధ్య జరిగే ఆధిపత్య పోరాటాలు, ప్రతీకారాలు, పరువు హత్యలు, భూవివాదాలు వంటి వాస్తవ ఘటనల ఆధారంగా అల్లుకున్న కథలు. ఇవి ఆ ప్రాంతపు మాండలికం, సంప్రదాయాలతో కూడి వాస్తవికతకు దగ్గరగా ఉంటాయి.",
         "keyTakeaways": ["ఆధిపత్య పోరాటాలు", "ప్రతీకార కథలు", "మాండలిక వర్ణన"],
         "transcript": [
@@ -81,7 +85,6 @@ SERVER_BOOK_DATABASE = {
             {"time": 13.5, "text": "అల్లుకున్న కథలు.ఇవి ఆ ప్రాంతపు మాండలికం, సంప్రదాయాలతో కూడి వాస్తవికతకు దగ్గరగా ఉంటాయి."}
         ]
     },
-    # IMPORTANT: Include ALL your books here on the server
     102: {
         "id": 102,
         "title": "Sapiens",
@@ -93,7 +96,7 @@ SERVER_BOOK_DATABASE = {
         "audioSrc": "https://storage.googleapis.com/donotdeletechand1/monkey-the-luffy.mp3",
         "textSummary": "A brief history of humankind, from the Stone Age to the present.",
         "keyTakeaways": ["Cognitive Revolution", "Agricultural Revolution"],
-        "transcript": 
+        "transcript":
         [
             {"time": 0.0, "text": "Monkey D. Luffy, inspired by pirate Shanks,"},
             {"time": 2.5, "text": "gained a rubber body from a Devil Fruit"},
@@ -199,7 +202,6 @@ def stories_page():
 def get_all_books_metadata():
     all_books_metadata = []
     for book_id, book_data in SERVER_BOOK_DATABASE.items():
-        # Exclude sensitive/large fields for metadata list sent to frontend
         metadata = {
             "id": book_data["id"],
             "title": book_data["title"],
@@ -220,16 +222,12 @@ def get_book_data(book_id):
     if not book_data:
         return jsonify({'error': 'Book not found'}), 404
     
-    # --- Authorization Logic (Example - uncomment and implement as needed) ---
-    # if not user_is_premium(request.headers.get('Authorization')): # assuming JWT or similar
-    #     return jsonify({'error': 'Premium content, please upgrade'}), 403
-    
     return jsonify(book_data)
 
 # --- NEW API ENDPOINT for Author Data ---
 @app.route('/api/author/<path:author_name>', methods=['GET'])
 def get_author_data(author_name):
-    decoded_author_name = unquote(author_name) # Decode the URL-encoded name
+    decoded_author_name = unquote(author_name)
     author_info = SERVER_AUTHOR_DATABASE.get(decoded_author_name)
     if not author_info:
         return jsonify({'error': f'Author "{decoded_author_name}" not found'}), 404
@@ -240,51 +238,50 @@ def get_author_data(author_name):
 @app.route('/user_data/<user_id>', methods=['GET'])
 def load_user_data(user_id):
     if not gcs_bucket:
-        print("APP.PY ERROR: GCS bucket not initialized for load operation.")
+        logger.error("GCS bucket not initialized for load operation.")
         return jsonify({'error': 'Backend GCS service is not configured.'}), 500
 
     blob_name = f"{USER_DATA_FOLDER}/{user_id}.json"
     blob = gcs_bucket.blob(blob_name)
-    print(f"APP.PY: Attempting to load blob: {blob_name} for user {user_id}")
+    logger.info(f"Attempting to load blob: {blob_name} for user {user_id}")
 
     try:
         if blob.exists():
             data = json.loads(blob.download_as_text())
-            print(f"APP.PY SUCCESS: Loaded data for user {user_id} from GCS. Data length: {len(json.dumps(data))} bytes")
+            logger.info(f"SUCCESS: Loaded data for user {user_id} from GCS. Data length: {len(json.dumps(data))} bytes")
             return jsonify({
                 'myLibrary': data.get('myLibrary', []),
                 'userRatings': data.get('userRatings', {}),
                 'listeningProgress': data.get('listeningProgress', {})
             })
         else:
-            print(f"APP.PY INFO: No existing data for user {user_id} in GCS. Blob does not exist. Returning empty structure.")
+            logger.info(f"INFO: No existing data for user {user_id} in GCS. Blob does not exist. Returning empty structure.")
             return jsonify({'myLibrary': [], 'userRatings': {}, 'listeningProgress': {}})
     except Exception as e:
-        print(f"APP.PY ERROR: Error during transcription: {e}")
-        traceback.print_exc()
+        logger.error(f"Error during load of user data for {user_id}: {e}", exc_info=True)
         return jsonify({'error': f"Could not load user data: {e}"}), 500
 
 @app.route('/user_data/<user_id>', methods=['POST'])
 def save_user_data(user_id):
     if not gcs_bucket:
-        print("APP.PY ERROR: GCS bucket not initialized for save operation.")
+        logger.error("GCS bucket not initialized for save operation.")
         return jsonify({'error': 'Backend GCS service is not configured.'}), 500
 
     data = request.get_json()
     if not data:
-        print(f"APP.PY ERROR: No JSON data provided for save for user {user_id}.")
+        logger.error(f"No JSON data provided for save for user {user_id}.")
         return jsonify({'error': 'No data provided.'}), 400
 
     blob_name = f"{USER_DATA_FOLDER}/{user_id}.json"
     blob = gcs_bucket.blob(blob_name)
-    print(f"APP.PY: Attempting to save blob: {blob_name} for user {user_id}. Payload: {json.dumps(data)}")
+    logger.info(f"Attempting to save blob: {blob_name} for user {user_id}. Payload: {json.dumps(data)}")
 
     try:
         blob.upload_from_string(json.dumps(data), content_type='application/json')
-        print(f"APP.PY SUCCESS: Saved data for user {user_id} to GCS.")
+        logger.info(f"SUCCESS: Saved data for user {user_id} to GCS.")
         return jsonify({'message': 'Data saved successfully.'})
     except Exception as e:
-        print(f"APP.PY ERROR during save for {user_id} (Blob: {blob_name}): {e}", exc_info=True)
+        logger.error(f"Error during save for {user_id} (Blob: {blob_name}): {e}", exc_info=True)
         return jsonify({'error': f"Could not save user data: {e}"}), 500
 
 # --- Transcription Route ---
@@ -303,18 +300,18 @@ def transcribe_audio():
         if not gcs_uri:
             return jsonify({'error': f"Invalid public GCS URL provided or unable to convert: {audio_url}"}), 400
 
-        print(f"APP.PY: Transcribing audio from URI: {gcs_uri}")
+        logger.info(f"Transcribing audio from URI: {gcs_uri}")
 
         audio = speech.RecognitionAudio(uri=gcs_uri)
         config = speech.RecognitionConfig(
             encoding=speech.RecognitionConfig.AudioEncoding.MP3,
             sample_rate_hertz=16000,
-            language_code="en-US", # Consider making this dynamic based on book.language
+            language_code="en-US",
             enable_word_time_offsets=True,
         )
 
         operation = stt_client.long_running_recognize(config=config, audio=audio)
-        print("APP.PY: Waiting for transcription to complete...")
+        logger.info("Waiting for transcription to complete...")
         response = operation.result(timeout=300)
 
         transcript_result = []
@@ -343,14 +340,14 @@ def transcribe_audio():
         return jsonify({'transcript': transcript_result})
 
     except Exception as e:
-        print(f"APP.PY ERROR: Error during transcription: {e}", exc_info=True)
+        logger.error(f"Error during transcription: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 # --- Razorpay Payment Routes ---
 @app.route('/create-razorpay-order', methods=['POST'])
 def create_razorpay_order():
     if not razorpay_client:
-        print("APP.PY ERROR: Razorpay client is not configured (likely API key issue).")
+        logger.error("Razorpay client is not configured (likely API key issue).")
         return jsonify({'error': 'Razorpay client is not configured.'}), 500
 
     data = request.get_json()
@@ -359,7 +356,7 @@ def create_razorpay_order():
     receipt_id = data.get('receipt', f'receipt_{os.urandom(8).hex()}')
 
     if not amount or not isinstance(amount, int) or amount <= 0:
-        print(f"APP.PY ERROR: Invalid amount received for order creation: {amount}")
+        logger.error(f"Invalid amount received for order creation: {amount}")
         return jsonify({'error': 'Invalid amount provided.'}), 400
 
     try:
@@ -369,16 +366,16 @@ def create_razorpay_order():
             'receipt': receipt_id,
             'payment_capture': '1'
         })
-        print(f"APP.PY SUCCESS: Razorpay order created: {order_details['id']}")
+        logger.info(f"SUCCESS: Razorpay order created: {order_details['id']}")
         return jsonify(order_details)
     except Exception as e:
-        print(f"APP.PY ERROR: Error creating Razorpay order: {e}", exc_info=True)
+        logger.error(f"Error creating Razorpay order: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/verify-razorpay-payment', methods=['POST'])
 def verify_razorpay_payment():
     if not razorpay_client:
-        print("APP.PY ERROR: Razorpay client is not configured for verification (likely API key issue).")
+        logger.error("Razorpay client is not configured for verification (likely API key issue).")
         return jsonify({'error': 'Razorpay client is not configured.'}), 500
 
     data = request.get_json()
@@ -387,7 +384,7 @@ def verify_razorpay_payment():
     razorpay_signature = data.get('razorpay_signature')
 
     if not all([razorpay_payment_id, razorpay_order_id, razorpay_signature]):
-        print("APP.PY ERROR: Missing payment verification data.")
+        logger.error("Missing payment verification data.")
         return jsonify({'error': 'Missing payment verification data.'}), 400
 
     try:
@@ -396,11 +393,11 @@ def verify_razorpay_payment():
             'razorpay_payment_id': razorpay_payment_id,
             'razorpay_signature': razorpay_signature
         })
-        print(f"APP.PY SUCCESS: Razorpay payment verified for order: {razorpay_order_id}, payment: {razorpay_payment_id}")
+        logger.info(f"SUCCESS: Razorpay payment verified for order: {razorpay_order_id}, payment: {razorpay_payment_id}")
         return jsonify({'message': 'Payment verification successful!'})
     except Exception as e:
-        print(f"APP.PY ERROR: Error verifying Razorpay payment: {e}", exc_info=True)
-        return jsonify({'error': 'Payment verification failed.'}), 400
+        logger.error(f"Error verifying Razorpay payment: {e}", exc_info=True)
+        return jsonify({'error': 'Payment verification failed.'}), 500
 
 if __name__ == '__main__':
     # For local development, you might set environment variables like this:
