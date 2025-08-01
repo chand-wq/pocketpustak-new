@@ -941,6 +941,8 @@
 
         const initializeApp = async () => {
             try {
+                // IMPORTANT: Use window.location.origin for API base URL when deployed
+                // The API_BASE_URL constant has been updated above.
                 const response = await fetch(`${API_BASE_URL}/books-metadata`);
                 if (!response.ok) {
                     const errorData = await response.json();
