@@ -27,4 +27,4 @@ EXPOSE 8080
 # The command to run the application using Gunicorn.
 # The `--bind 0.0.0.0:$PORT` part is crucial for Cloud Run/Container environments.
 # It tells Gunicorn to listen on all network interfaces at the port specified by the PORT environment variable.
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["python", "app.py"]
