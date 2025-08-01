@@ -82,43 +82,43 @@
              direction: rtl; /* Apply RTL only for clickable stars */
         }
         .star-rating-container > input {
-            display: none;  
+            display: none;   
         }
         .star-rating-container > label {
             position: relative;
             cursor: pointer;
-            color: #d1d5db;  
-            padding: 0 2px;  
+            color: #d1d5db;   
+            padding: 0 2px;   
         }
         .star-rating-container > label:before {
-            content: "\f005";  
+            content: "\f005";   
             font-family: "Font Awesome 5 Free";
-            font-weight: 900;  
+            font-weight: 900;   
         }
         .star-rating-container.clickable-rtl > input:checked ~ label:before,
         .star-rating-container.clickable-rtl > label:hover:before,
         .star-rating-container.clickable-rtl > label:hover ~ label:before {
-            color: #fbbf24;  
+            color: #fbbf24;   
         }
 
         .star-rating-container.display-only {
             direction: ltr; /* Ensure LTR for display only */
             font-size: 1rem;  /* Smaller stars for card */
-            pointer-events: none;  
+            pointer-events: none;   
         }
         .star-rating-container.display-only > label {
             cursor: default;
             color: #d1d5db;
-            font-weight: 400;  
+            font-weight: 400;   
         }
         .star-rating-container.display-only > label.filled-solid:before {
             color: #fbbf24;
-            font-weight: 900;  
+            font-weight: 900;   
         }
         .star-rating-container.display-only > label.filled-half:before {
-            content: "\f089";  
+            content: "\f089";   
             font-family: "Font Awesome 5 Free";
-            font-weight: 900;  
+            font-weight: 900;   
             color: #fbbf24;
         }
     </style>
@@ -217,18 +217,18 @@
         // CLIENT-SIDE CACHE: This will store a subset of book data for display (metadata only)
         let cachedBookDisplayData = [];
         // NEW: Client-side cache for fetched author biographies
-        let cachedAuthorData = {}; 
+        let cachedAuthorData = {};  
 
         // IMPORTANT: The full bookDatabase and authorDatabase are now on the SERVER (app.py)
 
         // Base URL for your Flask API
-        const API_BASE_URL = 'http://127.0.0.1:5500/api';
+        const API_BASE_URL = window.location.origin + '/api';
 
         let state = {
-            myLibrary: [], 
-            listeningProgress: {}, 
-            userRatings: {}, 
-            currentUser: null, 
+            myLibrary: [],  
+            listeningProgress: {},  
+            userRatings: {},  
+            currentUser: null,  
             currentlyPlayingId: null,
             lastViewId: 'home-view', // Tracks the last view to return to
             playbackSpeedIndex: 0,
@@ -249,7 +249,7 @@
             searchResultsView: document.getElementById('search-results-view'),
             detailsView: document.getElementById('details-view'),
             // NEW: Reference to the author details view
-            authorDetailsView: document.getElementById('author-details-view'), 
+            authorDetailsView: document.getElementById('author-details-view'),  
             paymentView: document.getElementById('payment-view'),
             paymentStatusMessage: document.getElementById('payment-status-message'),
             userProfileSection: document.getElementById('user-profile-section'),
@@ -286,11 +286,11 @@
 
         const renderStarRating = (bookId, currentRating, isClickable = true) => {
             let starsHtml = '';
-            const ratingForInputs = Math.round(currentRating); 
+            const ratingForInputs = Math.round(currentRating);  
             
             if (isClickable) {
                 // For clickable, stars are laid out RTL, so loop 5 down to 1
-                for (let i = 5; i >= 1; i--) { 
+                for (let i = 5; i >= 1; i--) {  
                     const starId = `star-${bookId}-${i}`;
                     const checkedAttribute = (i === ratingForInputs) ? 'checked' : '';
                     starsHtml += `
@@ -302,11 +302,11 @@
 
             } else { // Display only mode (LTR)
                 // For display only, stars are laid out LTR, so loop 1 up to 5
-                for (let i = 1; i <= 5; i++) { 
+                for (let i = 1; i <= 5; i++) {  
                     let labelClass = '';
-                    if (i <= Math.floor(currentRating)) { 
+                    if (i <= Math.floor(currentRating)) {  
                         labelClass = 'filled-solid';
-                    } else if (i - 0.5 <= currentRating && i > Math.floor(currentRating)) { 
+                    } else if (i - 0.5 <= currentRating && i > Math.floor(currentRating)) {  
                         labelClass = 'filled-half';
                     }
                     starsHtml += `<label class="${labelClass}"></label>`;
@@ -335,7 +335,7 @@
                         <a href="#" class="font-bold truncate hover:underline" onclick="event.preventDefault(); actions.showDetails(${book.id})">${book.title}</a>
                         <a href="#" class="text-sm text-gray-500 dark:text-gray-400 hover:underline" onclick="event.preventDefault(); actions.showAuthorDetails('${encodeURIComponent(book.author)}')">${book.author}</a>
                         <div class="flex items-center gap-2 mt-2 text-sm">
-                            ${renderStarRating(book.id, displayRating, false)} 
+                            ${renderStarRating(book.id, displayRating, false)}  
                             <span class="text-gray-600 dark:text-gray-300">(${displayRating.toFixed(1)})</span>
                         </div>
                         <div class="flex justify-between items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
@@ -436,7 +436,7 @@
                         </div>
                     </div>`;
                 
-                // IMPORTANT: Re-select elements after innerHTML is set
+                // IMPORTANT: Re-select elements after innerHTML is set for tab listeners
                 const currentDetailsTabNav = document.getElementById('details-tab-nav');
                 if (currentDetailsTabNav) {
                     currentDetailsTabNav.querySelectorAll('.details-tab').forEach(tab => tab.addEventListener('click', (e) => {
@@ -449,8 +449,8 @@
 
                 // Check if the book has an embedded transcript
                 if (book.transcript && book.transcript.length > 0) {
-                    dynamicTranscript = book.transcript; 
-                    const transcriptHtml = dynamicTranscript.map((line, index) => 
+                    dynamicTranscript = book.transcript;  
+                    const transcriptHtml = dynamicTranscript.map((line, index) =>  
                         `<p class="transcript-line" data-time="${line.time}" onclick="actions.seekTo(${line.time})">${line.text}</p>`
                     ).join('');
                     const transcriptPane = document.querySelector('#transcript-pane');
@@ -471,58 +471,59 @@
                 // Display loading state immediately
                 dom.authorDetailsView.innerHTML = `
                     <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
-                    <p class="text-center text-gray-500 dark:text-gray-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Loading author details...</p>`;
+                    <p class="text-center text-gray-500 dark:text-gray-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Loading author details for '${decodeURIComponent(authorName)}'...</p>`;
                 actions.showView('author-details-view');
 
-                let author = cachedAuthorData[authorName]; // Check cache first
+                let author = cachedAuthorData[decodeURIComponent(authorName)]; // Check cache first (use decoded name as key)
 
                 // Fetch author details from backend if not cached
                 if (!author) {
                     try {
                         const encodedAuthorName = encodeURIComponent(authorName);
-                        const response = await fetch(`${API_BASE_URL}/author/${encodedAuthorName}`);
+                        const response = await fetch(`${API_BASE_URL}/author/${encodedAuthorName}`); // Use encoded name for fetch
                         if (!response.ok) {
                             const errorData = await response.json();
                             throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
                         }
                         author = await response.json();
-                        cachedAuthorData[authorName] = author; // Cache for future use
+                        cachedAuthorData[decodeURIComponent(authorName)] = author; // Cache using decoded name
                     } catch (error) {
                         console.error('Error fetching author data:', error);
                         dom.authorDetailsView.innerHTML = `
                             <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
-                            <p class="text-center text-red-500 dark:text-red-400 py-10">Failed to load author details for '${authorName}': ${error.message}.</p>`;
+                            <p class="text-center text-red-500 dark:text-red-400 py-10">Failed to load author details for '${decodeURIComponent(authorName)}': ${error.message}.</p>`;
                         return; // Exit if fetching fails
                     }
                 }
 
                 // Filter cachedBookDisplayData to find all books by this author
-                const booksByAuthor = cachedBookDisplayData.filter(book => book.author === authorName);
+                // Important: Use `decodeURIComponent(authorName)` for comparison as author names in cachedBookDisplayData are not encoded.
+                const booksByAuthor = cachedBookDisplayData.filter(book => book.author === decodeURIComponent(authorName));
 
                 dom.authorDetailsView.innerHTML = `
                     <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
                     <div class="flex flex-col md:flex-row gap-8 items-start">
-                        <img src="${author?.photo || 'https://placehold.co/100x100/CCCCCC/000000?text=Author'}" alt="${authorName}" class="w-32 h-32 object-cover rounded-full shadow-lg flex-shrink-0">
+                        <img src="${author?.photo || 'https://placehold.co/100x100/CCCCCC/000000?text=Author'}" alt="${decodeURIComponent(authorName)}" class="w-32 h-32 object-cover rounded-full shadow-lg flex-shrink-0">
                         <div>
-                            <h1 class="text-4xl font-bold">${authorName}</h1>
+                            <h1 class="text-4xl font-bold">${decodeURIComponent(authorName)}</h1>
                             <p class="text-gray-700 dark:text-gray-300 mt-4 leading-relaxed">${author?.bio || 'Biography not available.'}</p>
                         </div>
                     </div>
 
-                    <h2 class="text-3xl font-bold mt-10 mb-6">Books by ${authorName}</h2>
+                    <h2 class="text-3xl font-bold mt-10 mb-6">Books by ${decodeURIComponent(authorName)}</h2>
                     <div id="author-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         ${booksByAuthor.length > 0 ? booksByAuthor.map(createBookCard).join('') : `<p class="text-center text-gray-500 dark:text-gray-400 col-span-full">No books found by this author.</p>`}
                     </div>
                 `;
                 // Now that content is loaded, ensure the view is active (redundant but safe after async ops)
                 actions.showView('author-details-view');
-            }, 
-
+            },
+            
             applyFiltersAndRender: () => {
                 const bookGrid = document.getElementById('book-grid');
                 if(!bookGrid) return;
                 let booksToRender = cachedBookDisplayData.filter(book => // Use cached data here
-                    (state.filters.category === 'All' || book.category === state.filters.category) && 
+                    (state.filters.category === 'All' || book.category === state.filters.category) &&  
                     (state.filters.language === 'All' || book.language === state.filters.language)
                 );
                 renderBooks(bookGrid, booksToRender);
@@ -571,9 +572,9 @@
                 const bookProgress = progress?.[lastPlayedBookId];
                 
                 // If there's no last played book or no progress, hide the section
-                if (!lastPlayedBookId || !bookProgress || bookProgress < 1) { 
-                    container.innerHTML = ''; 
-                    return; 
+                if (!lastPlayedBookId || !bookProgress || bookProgress < 1) {  
+                    container.innerHTML = '';  
+                    return;  
                 }
 
                 container.innerHTML = `<p class="text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Loading continue listening...</p>`; // Loading state
@@ -581,7 +582,7 @@
                 let book = cachedBookDisplayData.find(b => b.id === lastPlayedBookId); // Try to get metadata from cache
                 // If metadata is not cached OR if we need full book data (which would include audioSrc)
                 // then fetch the full book data from the backend.
-                if (!book) { 
+                if (!book) {  
                     try {
                         const response = await fetch(`${API_BASE_URL}/book/${lastPlayedBookId}`);
                         if (!response.ok) throw new Error('Failed to fetch last played book');
@@ -599,7 +600,7 @@
                 }
                 
                 // Now `book` should contain `audioSrc` from the dynamic fetch
-                const tempAudio = new Audio(book.audioSrc); 
+                const tempAudio = new Audio(book.audioSrc);  
                 tempAudio.onloadedmetadata = () => {
                     const percentage = (bookProgress / tempAudio.duration) * 100;
                     if (percentage < 99) { // Only show if not almost finished
@@ -724,8 +725,8 @@
 
                 // Check if the book has an embedded transcript
                 if (book.transcript && book.transcript.length > 0) {
-                    dynamicTranscript = book.transcript; 
-                    const transcriptHtml = dynamicTranscript.map((line, index) => 
+                    dynamicTranscript = book.transcript;  
+                    const transcriptHtml = dynamicTranscript.map((line, index) =>  
                         `<p class="transcript-line" data-time="${line.time}" onclick="actions.seekTo(${line.time})">${line.text}</p>`
                     ).join('');
                     const transcriptPane = document.querySelector('#transcript-pane');
@@ -740,11 +741,8 @@
                 }
             },
 
-            // NEW: showAuthorDetails action
-            showAuthorDetails: async (authorName) => {
-                // Save the ID of the current active view before navigating
-                state.lastViewId = document.querySelector('.app-view.active-view')?.id || 'home-view'; // Fallback
-
+            // NEW: Renderer for Author Details Page
+            authorDetailsPage: async (authorName) => {
                 // Display loading state immediately
                 dom.authorDetailsView.innerHTML = `
                     <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
@@ -756,7 +754,283 @@
                 // Fetch author details from backend if not cached
                 if (!author) {
                     try {
-                        const response = await fetch(`${API_BASE_URL}/author/${authorName}`); // Use encoded name for fetch
+                        const encodedAuthorName = encodeURIComponent(authorName);
+                        const response = await fetch(`${API_BASE_URL}/author/${encodedAuthorName}`); // Use encoded name for fetch
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
+                        }
+                        author = await response.json();
+                        cachedAuthorData[decodeURIComponent(authorName)] = author; // Cache using decoded name
+                    } catch (error) {
+                        console.error('Error fetching author data:', error);
+                        dom.authorDetailsView.innerHTML = `
+                            <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                            <p class="text-center text-red-500 dark:text-red-400 py-10">Failed to load author details for '${decodeURIComponent(authorName)}': ${error.message}.</p>`;
+                        return; // Exit if fetching fails
+                    }
+                }
+
+                // Filter cachedBookDisplayData to find all books by this author
+                // Important: Use `decodeURIComponent(authorName)` for comparison as author names in cachedBookDisplayData are not encoded.
+                const booksByAuthor = cachedBookDisplayData.filter(book => book.author === decodeURIComponent(authorName));
+
+                dom.authorDetailsView.innerHTML = `
+                    <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <img src="${author?.photo || 'https://placehold.co/100x100/CCCCCC/000000?text=Author'}" alt="${decodeURIComponent(authorName)}" class="w-32 h-32 object-cover rounded-full shadow-lg flex-shrink-0">
+                        <div>
+                            <h1 class="text-4xl font-bold">${decodeURIComponent(authorName)}</h1>
+                            <p class="text-gray-700 dark:text-gray-300 mt-4 leading-relaxed">${author?.bio || 'Biography not available.'}</p>
+                        </div>
+                    </div>
+
+                    <h2 class="text-3xl font-bold mt-10 mb-6">Books by ${decodeURIComponent(authorName)}</h2>
+                    <div id="author-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        ${booksByAuthor.length > 0 ? booksByAuthor.map(createBookCard).join('') : `<p class="text-center text-gray-500 dark:text-gray-400 col-span-full">No books found by this author.</p>`}
+                    </div>
+                `;
+                // Now that content is loaded, ensure the view is active (redundant but safe after async ops)
+                actions.showView('author-details-view');
+            },
+            
+            applyFiltersAndRender: () => {
+                const bookGrid = document.getElementById('book-grid');
+                if(!bookGrid) return;
+                let booksToRender = cachedBookDisplayData.filter(book => // Use cached data here
+                    (state.filters.category === 'All' || book.category === state.filters.category) &&  
+                    (state.filters.language === 'All' || book.language === state.filters.language)
+                );
+                renderBooks(bookGrid, booksToRender);
+            },
+            filters: () => {
+                const langFilter = document.getElementById('language-filter');
+                const catFilters = document.getElementById('category-filters');
+                if(!langFilter || !catFilters) return;
+                
+                const languages = ['All', 'English', 'Hindi', 'Tamil', 'Kannada', 'Telugu']; // Added Telugu
+                langFilter.innerHTML = languages.map(lang => `<option value="${lang}">${lang === 'All' ? 'All Languages' : lang}</option>`).join('');
+                
+                const categories = ['All', 'Self-Help', 'History'];
+                catFilters.innerHTML = categories.map(cat => `<button class="category-btn ${cat === 'All' ? 'ring-2 ring-violet-500' : ''} bg-gray-100 dark:bg-gray-700/50 px-4 py-2 rounded-full text-sm font-semibold" data-category="${cat}">${cat}</button>`).join('');
+            },
+            todaysRecommendation: async () => { // Modified to fetch dynamically
+                const container = document.getElementById('todays-recommendation');
+                if (!container) return;
+                container.innerHTML = `<p class="text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Loading recommendation...</p>`; // Loading state
+
+                let book = cachedBookDisplayData.find(b => b.id === 101); // Try to get from cache (metadata only)
+                if (!book) { // If not cached, fetch it specifically (metadata only)
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/book/101`); // Fetch full book to get metadata
+                        if (!response.ok) throw new Error('Failed to fetch recommended book metadata');
+                        book = await response.json(); // Get full book object
+                        // Add to cachedBookDisplayData if not already there, but only the metadata part
+                        if (!cachedBookDisplayData.find(b => b.id === book.id)) {
+                            const { audioSrc, transcript, ...rest } = book;
+                            cachedBookDisplayData.push(rest);
+                        }
+                    } catch (error) {
+                        console.error('Error loading today\'s recommendation:', error);
+                        container.innerHTML = `<p class="text-center text-red-500">Could not load recommendation.</p>`;
+                        return;
+                    }
+                }
+                // Use the metadata for display
+                if(book) container.innerHTML = `<div class="bg-gradient-to-r from-violet-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg flex items-center gap-6"><img src="${book.cover}" class="w-24 h-36 object-cover rounded-lg shadow-md flex-shrink-0"><div class="flex-grow"><h3 class="font-bold text-2xl">${book.title}</h3><p class="opacity-90 mb-3">${book.author}</p><button onclick="actions.playBook(${book.id})" class="bg-white/30 hover:bg-white/50 px-4 py-2 rounded-full font-semibold transition"><i class="fas fa-play mr-2"></i>Listen</button></div></div>`;
+            },
+            continueListening: async () => { // Modified to fetch dynamically
+                const container = document.getElementById('continue-listening-section');
+                if(!container) return;
+                
+                const { lastPlayedBookId, progress } = state.listeningProgress;
+                const bookProgress = progress?.[lastPlayedBookId];
+                
+                // If there's no last played book or no progress, hide the section
+                if (!lastPlayedBookId || !bookProgress || bookProgress < 1) {  
+                    container.innerHTML = '';  
+                    return;  
+                }
+
+                container.innerHTML = `<p class="text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Loading continue listening...</p>`; // Loading state
+
+                let book = cachedBookDisplayData.find(b => b.id === lastPlayedBookId); // Try to get metadata from cache
+                // If metadata is not cached OR if we need full book data (which would include audioSrc)
+                // then fetch the full book data from the backend.
+                if (!book) {  
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/book/${lastPlayedBookId}`);
+                        if (!response.ok) throw new Error('Failed to fetch last played book');
+                        book = await response.json(); // Get full book object
+                        // Optionally add metadata to cachedBookDisplayData if not already there
+                        if (!cachedBookDisplayData.find(b => b.id === book.id)) {
+                             const { audioSrc, transcript, ...rest } = book;
+                             cachedBookDisplayData.push(rest);
+                        }
+                    } catch (error) {
+                        console.error('Error loading continue listening book:', error);
+                        container.innerHTML = `<p class="text-center text-red-500">Could not load continue listening content.</p>`;
+                        return;
+                    }
+                }
+                
+                // Now `book` should contain `audioSrc` from the dynamic fetch
+                const tempAudio = new Audio(book.audioSrc);  
+                tempAudio.onloadedmetadata = () => {
+                    const percentage = (bookProgress / tempAudio.duration) * 100;
+                    if (percentage < 99) { // Only show if not almost finished
+                        container.innerHTML = `
+                        <div class="mb-10"><h2 class="text-2xl font-semibold mb-4">Continue Listening</h2>
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg flex items-center gap-6">
+                                <img src="${book.cover}" class="w-24 h-24 object-cover rounded-lg flex-shrink-0">
+                                <div class="flex-grow">
+                                    <h3 class="font-bold text-xl">${book.title}</h3><p class="text-gray-500 dark:text-gray-400 mb-2">${book.author}</p>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5"><div class="bg-violet-600 h-1.5 rounded-full" style="width: ${percentage}%"></div></div>
+                                </div>
+                                <button onclick="actions.playBook(${book.id}, ${bookProgress})" class="w-16 h-16 text-3xl bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-violet-700 transition flex-shrink-0"><i class="fas fa-play"></i></button>
+                            </div>
+                        </div>`;
+                    } else {
+                        container.innerHTML = ''; // Hide if almost finished
+                    }
+                };
+            }
+        };
+
+        const actions = {
+            // MODIFIED: showView to handle authorDetailsView and general view management
+            showView: (viewId) => {
+                // Remove active-view from all content sections
+                dom.homeView.classList.remove('active-view');
+                dom.libraryView.classList.remove('active-view');
+                dom.searchResultsView.classList.remove('active-view');
+                dom.detailsView.classList.remove('active-view');
+                dom.authorDetailsView.classList.remove('active-view');
+                dom.paymentView.classList.remove('active-view');
+
+                // Add active-view to the requested view
+                const viewEl = document.getElementById(viewId);
+                if (viewEl) viewEl.classList.add('active-view');
+
+                // Update navigation link active states
+                dom.navLinks.forEach(link => link.classList.remove('active'));
+                const navId = viewId.split('-')[0]; // e.g., 'home' from 'home-view'
+                const activeNavLink = document.getElementById(`nav-${navId}`);
+                if (activeNavLink) activeNavLink.classList.add('active');
+
+                // Re-render specific views if they are becoming active
+                if (viewId === 'home-view') {
+                    renderers.homePage();
+                } else if (viewId === 'library-view') {
+                    renderers.libraryPage();
+                } // detailsPage and authorDetailsPage are called directly with data,
+                  // searchPage is called by searchInput event.
+            },
+            
+            showDetails: async (bookId) => {
+                // Save the ID of the current active view before navigating
+                state.lastViewId = document.querySelector('.app-view.active-view')?.id || 'home-view'; // Fallback
+
+                // Display loading state immediately
+                dom.detailsView.innerHTML = `
+                    <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                    <p class="text-center text-gray-500 dark:text-gray-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Loading book details...</p>`;
+                actions.showView('details-view'); // Ensure this view is active while loading
+
+                let book;
+
+                // Fetch full book details including audioSrc and transcript from backend
+                try {
+                    const response = await fetch(`${API_BASE_URL}/book/${bookId}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
+                    }
+                    book = await response.json(); // Full book object with all details
+                } catch (error) {
+                    console.error('Error fetching full book data:', error);
+                    dom.detailsView.innerHTML = `
+                        <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                        <p class="text-center text-red-500 dark:text-red-400 py-10">Failed to load book details: ${error.message}. Please try again.</p>`;
+                    return; // Exit if fetching fails
+                }
+
+                const userRatedValueForDetails = state.userRatings[book.id];
+                const displayRatingForDetails = userRatedValueForDetails !== undefined ? userRatedValueForDetails : book.rating;
+
+                dom.detailsView.innerHTML = `
+                    <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="md:w-1/3 lg:w-1/4 flex-shrink-0"><img src="${book.cover}" class="rounded-lg shadow-lg w-full"><button onclick="actions.playBook(${book.id});" class="w-full mt-4 bg-violet-600 text-white font-bold py-3 rounded-lg hover:bg-violet-700 transition flex items-center justify-center gap-2"><i class="fas fa-play"></i> Listen</button></div>
+                        <div class="md:w-2/3 lg:w-3/4">
+                            <h2 class="text-4xl font-bold">${book.title}</h2>
+                            <h3 class="text-xl text-gray-600 dark:text-gray-400 mt-1">
+                                <a href="#" onclick="event.preventDefault(); actions.showAuthorDetails('${encodeURIComponent(book.author)}')" class="hover:underline">${book.author}</a>
+                            </h3>
+                            <div class="flex items-center gap-2 my-4">${renderStarRating(book.id, displayRatingForDetails, true)}<span class="text-lg font-bold">(${displayRatingForDetails.toFixed(1)})</span></div>
+                            <div class="border-b border-gray-200 dark:border-gray-600 mb-4 mt-6">
+                                <nav class="-mb-px flex gap-6" id="details-tab-nav">
+                                    <button class="details-tab active-tab" data-tab="summary">Summary</button>
+                                    <button class="details-tab" data-tab="takeaways">Key Takeaways</button>
+                                    <button class="details-tab" data-tab="transcript">Transcript</button>
+                                </nav>
+                            </div>
+                            <div id="details-tab-content">
+                                <div id="summary-pane" class="details-tab-pane active-pane"><p class="text-gray-700 dark:text-gray-300 leading-relaxed">${book.textSummary}</p></div>
+                                <div id="takeaways-pane" class="details-tab-pane"><ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">${book.keyTakeaways.map(t => `<li>${t}</li>`).join('')}</ul></div>
+                                <div id="transcript-pane" class="details-tab-pane max-h-[40vh] overflow-y-auto pr-2">
+                                    <div class="space-y-2 p-4 text-center text-gray-500">
+                                        <p>Loading transcript...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                // IMPORTANT: Re-select elements after innerHTML is set for tab listeners
+                const currentDetailsTabNav = document.getElementById('details-tab-nav');
+                if (currentDetailsTabNav) {
+                    currentDetailsTabNav.querySelectorAll('.details-tab').forEach(tab => tab.addEventListener('click', (e) => {
+                        document.querySelectorAll('.details-tab').forEach(t => t.classList.remove('active-tab'));
+                        document.querySelectorAll('.details-tab-pane').forEach(p => p.classList.remove('active-pane'));
+                        e.currentTarget.classList.add('active-tab');
+                        document.getElementById(`${e.currentTarget.dataset.tab}-pane`).classList.add('active-pane');
+                    }));
+                }
+
+                // Check if the book has an embedded transcript
+                if (book.transcript && book.transcript.length > 0) {
+                    dynamicTranscript = book.transcript;  
+                    const transcriptHtml = dynamicTranscript.map((line, index) =>  
+                        `<p class="transcript-line" data-time="${line.time}" onclick="actions.seekTo(${line.time})">${line.text}</p>`
+                    ).join('');
+                    const transcriptPane = document.querySelector('#transcript-pane');
+                    if (transcriptPane) {
+                        transcriptPane.innerHTML = `<div class="space-y-2">${transcriptHtml}</div>`;
+                    }
+                } else {
+                    const transcriptPane = document.querySelector('#transcript-pane');
+                    if (transcriptPane) {
+                        transcriptPane.innerHTML = `<p class="text-center text-gray-500">Transcript not available for this book.</p>`;
+                    }
+                }
+            },
+
+            // NEW: Renderer for Author Details Page
+            authorDetailsPage: async (authorName) => {
+                // Display loading state immediately
+                dom.authorDetailsView.innerHTML = `
+                    <div class="mb-6"><button onclick="actions.showView('${state.lastViewId}')" class="font-semibold text-violet-600 dark:text-violet-400 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back</button></div>
+                    <p class="text-center text-gray-500 dark:text-gray-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Loading author details for '${decodeURIComponent(authorName)}'...</p>`;
+                actions.showView('author-details-view');
+
+                let author = cachedAuthorData[decodeURIComponent(authorName)]; // Check cache first (use decoded name as key)
+
+                // Fetch author details from backend if not cached
+                if (!author) {
+                    try {
+                        const encodedAuthorName = encodeURIComponent(authorName);
+                        const response = await fetch(`${API_BASE_URL}/author/${encodedAuthorName}`); // Use encoded name for fetch
                         if (!response.ok) {
                             const errorData = await response.json();
                             throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
@@ -800,7 +1074,7 @@
                 // Save the ID of the current active view before navigating
                 state.lastViewId = document.querySelector('.app-view.active-view')?.id || 'home-view'; // Fallback
 
-                let book; 
+                let book;  
                 // We need the full book object for playback (audioSrc, possibly transcript for player highlight)
                 try {
                     const response = await fetch(`${API_BASE_URL}/book/${bookId}`);
@@ -829,15 +1103,15 @@
 
                 if (dom.audioPlayer.src !== book.audioSrc) {
                     dom.audioPlayer.src = book.audioSrc;
-                    dom.audioPlayer.load(); 
+                    dom.audioPlayer.load();  
                     dom.audioPlayer.onloadedmetadata = () => {
                         dom.audioPlayer.currentTime = startTime;
-                        actions.updateDuration(); 
+                        actions.updateDuration();  
                         actions.playAudio();
                     };
                 } else {
                     dom.audioPlayer.currentTime = startTime;
-                    actions.updateDuration(); 
+                    actions.updateDuration();  
                     actions.playAudio();
                 }
 
@@ -846,7 +1120,7 @@
                     dynamicTranscript = book.transcript || [];
                     const transcriptPane = document.querySelector('#transcript-pane');
                     if (transcriptPane) {
-                         const transcriptHtml = dynamicTranscript.map((line, index) => 
+                        const transcriptHtml = dynamicTranscript.map((line, index) =>  
                             `<p class="transcript-line" data-time="${line.time}" onclick="actions.seekTo(${line.time})">${line.text}</p>`
                         ).join('');
                         transcriptPane.innerHTML = `<div class="space-y-2">${transcriptHtml}</div>`;
@@ -857,28 +1131,28 @@
                 dom.audioPlayer.play().catch(e => {
                     console.error("Error playing audio:", e);
                     alert("Audio playback prevented by browser. Please interact with the page (e.g., click play again) or enable autoplay for this site.");
-                }); 
-                dom.playIcon.style.display = 'none'; 
-                dom.pauseIcon.style.display = 'block'; 
+                });  
+                dom.playIcon.style.display = 'none';  
+                dom.pauseIcon.style.display = 'block';  
             },
-            pauseAudio: () => { 
-                dom.audioPlayer.pause(); 
-                dom.playIcon.style.display = 'block'; 
-                dom.pauseIcon.style.display = 'none'; 
+            pauseAudio: () => {  
+                dom.audioPlayer.pause();  
+                dom.playIcon.style.display = 'block';  
+                dom.pauseIcon.style.display = 'none';  
             },
-            saveProgress: () => { 
+            saveProgress: () => {  
                 if (state.currentUser && state.currentlyPlayingId) {
                     state.listeningProgress.lastPlayedBookId = state.currentlyPlayingId;
-                    state.listeningProgress.progress = state.listeningProgress.progress || {}; 
+                    state.listeningProgress.progress = state.listeningProgress.progress || {};  
                     state.listeningProgress.progress[state.currentlyPlayingId] = dom.audioPlayer.currentTime;
-                    actions.saveUserPersistenceData(); 
+                    actions.saveUserPersistenceData();  
                 }
             },
-            toggleLibrary: async (event, button, bookId) => { 
+            toggleLibrary: async (event, button, bookId) => {  
                 if (event) event.stopPropagation();
-                if (!state.currentUser) { 
-                    alert("Please log in to save content."); 
-                    return; 
+                if (!state.currentUser) {  
+                    alert("Please log in to save content.");  
+                    return;  
                 }
                 
                 const isSaved = state.myLibrary.includes(bookId);
@@ -887,9 +1161,9 @@
                 } else {
                     state.myLibrary.push(bookId);
                 }
-                await actions.saveUserPersistenceData(); 
+                await actions.saveUserPersistenceData();  
 
-                const parentCard = button.closest('.book-card'); 
+                const parentCard = button.closest('.book-card');  
                 if (parentCard) {
                     const book = cachedBookDisplayData.find(b => b.id === bookId); // Use cached display data
                     if (book) {
@@ -901,19 +1175,19 @@
                 if (dom.libraryView.classList.contains('active-view')) renderers.libraryPage();
                 if (dom.homeView.classList.contains('active-view')) renderers.applyFiltersAndRender();
             },
-            rateBook: async (bookId, rating) => { 
+            rateBook: async (bookId, rating) => {  
                 if (!state.currentUser) {
                     alert("Please log in to rate books.");
                     return;
                 }
                 state.userRatings[bookId] = rating;
-                await actions.saveUserPersistenceData(); 
+                await actions.saveUserPersistenceData();  
                 console.log(`Book ${bookId} rated: ${rating} stars. All ratings:`, state.userRatings);
 
                 const bookCardElement = document.querySelector(`.book-card[data-book-id="${bookId}"]`);
                 if (bookCardElement) {
                     const book = cachedBookDisplayData.find(b => b.id === bookId); // Use cached display data
-                    if (book) { 
+                    if (book) {  
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = createBookCard(book);
                         bookCardElement.parentNode.replaceChild(tempDiv.firstElementChild, bookCardElement);
@@ -931,7 +1205,7 @@
                 const userData = {
                     myLibrary: state.myLibrary,
                     userRatings: state.userRatings,
-                    listeningProgress: state.listeningProgress, 
+                    listeningProgress: state.listeningProgress,  
                 };
                 try {
                     const response = await fetch('/user_data/' + state.currentUser.id, {
@@ -963,7 +1237,7 @@
                         const data = await response.json();
                         state.myLibrary = data.myLibrary || [];
                         state.userRatings = data.userRatings || {};
-                        state.listeningProgress = data.listeningProgress || {}; 
+                        state.listeningProgress = data.listeningProgress || {};  
                         console.log(`User data for ${state.currentUser.id} loaded from GCS.`);
                         // No longer call homePage directly here, it's called after initial book data load
                     } else {
@@ -972,7 +1246,7 @@
                         // Reset to defaults on error
                         state.myLibrary = [];
                         state.userRatings = {};
-                        state.listeningProgress = {}; 
+                        state.listeningProgress = {};  
                     }
                 } catch (error) {
                     console.error(`Network error loading user data for ${state.currentUser.id}:`, error);
@@ -986,10 +1260,10 @@
             setDarkMode: (isDark) => {
                 dom.htmlEl.classList.toggle('dark', isDark);
                 dom.darkModeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-                localStorage.setItem('theme', isDark ? 'dark' : 'light'); 
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');  
             },
-            handleUserFromLocalStorage: async () => { 
-                const user = JSON.parse(localStorage.getItem('user')); 
+            handleUserFromLocalStorage: async () => {  
+                const user = JSON.parse(localStorage.getItem('user'));  
                 if (user && user.isLoggedIn) {
                     state.currentUser = user;
                     const profilePhoto = user.photoURL && user.photoURL !== 'null' ? user.photoURL : `https://placehold.co/40x40/7c3aed/FFFFFF?text=${(user.displayName || 'A')[0]}`;
@@ -1006,56 +1280,56 @@
                             <i class="fas fa-sign-out-alt w-5 text-center mr-2"></i>Logout
                         </button>
                     `;
-                    await actions.loadUserPersistenceData(); 
+                    await actions.loadUserPersistenceData();  
                 } else {
-                    window.location.href = "/login.html"; 
+                    window.location.href = "/login.html";  
                 }
             },
             logout: () => {
                 localStorage.removeItem('user');
                 state.myLibrary = [];
                 state.userRatings = {};
-                state.listeningProgress = {}; 
+                state.listeningProgress = {};  
                 state.currentUser = null;
-                window.location.href = "/login.html"; 
+                window.location.href = "/login.html";  
             },
             updateProgress: () => {
                 if (dom.audioPlayer.duration) {
                     dom.progressBar.value = dom.audioPlayer.currentTime;
                     dom.currentTimeEl.textContent = actions.formatTime(dom.audioPlayer.currentTime);
-                    actions.saveProgress(); 
+                    actions.saveProgress();  
                 }
                 
-                const currentTranscript = dynamicTranscript; 
+                const currentTranscript = dynamicTranscript;  
                 if (!currentTranscript || !dom.detailsView.classList.contains('active-view')) return;
                 const currentTime = dom.audioPlayer.currentTime;
                 // Find the active line
-                let activeLineIndex = currentTranscript.findIndex((line, i) => 
+                let activeLineIndex = currentTranscript.findIndex((line, i) =>  
                     currentTime >= line.time && (i === currentTranscript.length - 1 || currentTime < currentTranscript[i + 1].time)
                 );
                 
                 // Remove active class from all, then add to the current one
-                document.querySelectorAll(`#details-tab-content #transcript-pane .transcript-line`).forEach((line, index) => line.classList.toggle('active', index === activeLineIndex)); 
+                document.querySelectorAll(`#details-tab-content #transcript-pane .transcript-line`).forEach((line, index) => line.classList.toggle('active', index === activeLineIndex));  
                 
                 // Scroll into view
-                const activeLine = document.querySelector(`#details-tab-content #transcript-pane .transcript-line.active`); 
+                const activeLine = document.querySelector(`#details-tab-content #transcript-pane .transcript-line.active`);  
                 if(activeLine) {
                     activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             },
             updateDuration: () => {
-                if (dom.audioPlayer.duration && isFinite(dom.audioPlayer.duration)) { 
+                if (dom.audioPlayer.duration && isFinite(dom.audioPlayer.duration)) {  
                     dom.totalDurationEl.textContent = actions.formatTime(dom.audioPlayer.duration);
                     dom.progressBar.max = dom.audioPlayer.duration;
                 } else {
-                    dom.totalDurationEl.textContent = "0:00"; 
+                    dom.totalDurationEl.textContent = "0:00";  
                     dom.progressBar.max = 0;
                 }
             },
             skipAudio: (seconds) => { dom.audioPlayer.currentTime += seconds; },
             seekTo: (time) => { if (state.currentlyPlayingId !== null) dom.audioPlayer.currentTime = time; },
             formatTime: (seconds) => {
-                if (isNaN(seconds) || !isFinite(seconds)) return "0:00"; 
+                if (isNaN(seconds) || !isFinite(seconds)) return "0:00";  
                 const m = Math.floor(seconds / 60);
                 const s = Math.floor(seconds % 60);
                 return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -1092,7 +1366,7 @@
             startRazorpayPayment: async () => {
                 if (!state.currentUser || !state.currentUser.email) {
                     alert("Please log in to make a payment.");
-                    actions.showView('home-view'); 
+                    actions.showView('home-view');  
                     return;
                 }
 
@@ -1101,7 +1375,7 @@
 
                 if (amountInput === null || amountInput.trim() === "") {
                     dom.paymentStatusMessage.innerHTML = '<p class="text-lg text-red-500 dark:text-red-400">Payment cancelled or no amount entered.</p>';
-                    actions.showView('payment-view'); 
+                    actions.showView('payment-view');  
                     return;
                 }
 
@@ -1109,7 +1383,7 @@
                 if (isNaN(parsedAmount) || parsedAmount <= 0) {
                     alert("Please enter a valid positive number for the amount.");
                     dom.paymentStatusMessage.innerHTML = '<p class="text-lg text-red-500 dark:text-red-400">Invalid amount entered.</p>';
-                    actions.showView('payment-view'); 
+                    actions.showView('payment-view');  
                     return;
                 }
 
@@ -1119,7 +1393,7 @@
                 dom.paymentStatusMessage.innerHTML = '<p class="text-lg text-gray-700 dark:text-gray-300">Initiating payment...</p>';
 
                 try {
-                    const orderResponse = await fetch('http://127.0.0.1:5500/create-razorpay-order', {
+                    const orderResponse = await fetch(`${API_BASE_URL}/create-razorpay-order`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ amount: amountInPaisa, currency: "INR" })
@@ -1132,19 +1406,19 @@
                     }
 
                     const options = {
-                        key: 'rzp_test_WprqVAEObL47N8', 
-                        amount: orderData.amount, 
+                        key: 'rzp_test_WprqVAEObL47N8',  
+                        amount: orderData.amount,  
                         currency: orderData.currency,
                         name: "Pocket Pustak",
                         description: "Premium Subscription",
-                        image: "https://placehold.co/60x60/8b5cf6/FFFFFF?text=PP", 
-                        order_id: orderData.id, 
+                        image: "https://placehold.co/60x60/8b5cf6/FFFFFF?text=PP",  
+                        order_id: orderData.id,  
                         handler: async function (response) {
                             console.log("Razorpay callback successful:", response);
                             dom.paymentStatusMessage.innerHTML = `<p class="text-lg text-gray-700 dark:text-gray-300">Verifying payment...</p>`;
 
                             try {
-                                const verifyResponse = await fetch('http://127.0.0.1:5500/verify-razorpay-payment', {
+                                const verifyResponse = await fetch(`${API_BASE_URL}/verify-razorpay-payment`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -1161,13 +1435,13 @@
                                         <p class="text-gray-700 dark:text-gray-300">Payment ID: ${response.razorpay_payment_id}</p>
                                         <p class="text-gray-700 dark:text-gray-300">${verifyData.message}</p>
                                         <button onclick="actions.showView('home-view')" class="mt-4 bg-violet-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-violet-700 transition">Go to Home</button>
-                                    `;
+                                        `;
                                 } else {
                                     dom.paymentStatusMessage.innerHTML = `
                                         <p class="text-red-600 dark:text-red-400 text-2xl font-bold mb-4"><i class="fas fa-times-circle mr-2"></i>Payment Verification Failed!</p>
                                         <p class="text-gray-700 dark:text-gray-300">Error: ${verifyData.error || 'Unknown verification error'}</p>
                                         <button onclick="actions.showView('home-view')" class="mt-4 bg-violet-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-violet-700 transition">Go to Home</button>
-                                    `;
+                                        `;
                                 }
 
                             } catch (verifyError) {
@@ -1176,19 +1450,19 @@
                                     <p class="text-red-600 dark:text-red-400 text-2xl font-bold mb-4"><i class="fas fa-times-circle mr-2"></i>Verification Error!</p>
                                     <p class="text-gray-700 dark:text-gray-300">Could not connect to verification service.</p>
                                     <button onclick="actions.showView('home-view')" class="mt-4 bg-violet-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-violet-700 transition">Go to Home</button>
-                                `;
+                                    `;
                             }
                         },
                         prefill: {
                             name: state.currentUser.displayName || "Guest User",
                             email: state.currentUser.email || "",
-                            contact: "" 
+                            contact: ""  
                         },
                         notes: {
                             address: "Pocket Pustak Office"
                         },
                         theme: {
-                            color: "#6D28D9" 
+                            color: "#6D28D9"  
                         }
                     };
 
@@ -1200,7 +1474,7 @@
                             <p class="text-gray-700 dark:text-gray-300">Code: ${response.error.code}</p>
                             <p class="text-gray-700 dark:text-gray-300">Description: ${response.error.description}</p>
                             <button onclick="actions.showView('home-view')" class="mt-4 bg-violet-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-violet-700 transition">Go to Home</button>
-                        `;
+                            `;
                     });
                     rzp.open();
 
@@ -1210,36 +1484,38 @@
                         <p class="text-red-600 dark:text-red-400 text-2xl font-bold mb-4"><i class="fas fa-times-circle mr-2"></i>Payment Initiation Failed!</p>
                         <p class="text-gray-700 dark:text-gray-300">Could not connect to payment backend or an error occurred.</p>
                         <button onclick="actions.showView('home-view')" class="mt-4 bg-violet-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-violet-700 transition">Go to Home</button>
-                    `;
+                        `;
                 }
             }
         };
 
-        const initializeApp = async () => { // Made async to await data fetches
-            await actions.handleUserFromLocalStorage();
-            
-            const preferredTheme = localStorage.getItem('theme') || 'light';
-            actions.setDarkMode(preferredTheme === 'dark');
-
-            // NEW: Fetch ALL book metadata for initial display from the backend
+        const initializeApp = async () => {
             try {
+                // IMPORTANT: Use window.location.origin for API base URL when deployed
+                // The API_BASE_URL constant has been updated above.
                 const response = await fetch(`${API_BASE_URL}/books-metadata`);
-                if (!response.ok) throw new Error('Failed to fetch initial book metadata');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to fetch initial book metadata: ${errorData.error || response.statusText}`);
+                }
                 cachedBookDisplayData = await response.json(); // Store the metadata
+                await actions.handleUserFromLocalStorage();
                 
+                const preferredTheme = localStorage.getItem('theme') || 'light';
+                actions.setDarkMode(preferredTheme === 'dark');
                 renderers.homePage(); // Now call homePage AFTER data is loaded
             } catch (error) {
                 console.error('Error fetching initial book data:', error);
-                dom.homeView.innerHTML = `<p class="text-center text-red-500 py-10">Failed to load content. Please try again later.</p>`;
+                dom.homeView.innerHTML = `<p class="text-center text-red-500 py-10">Failed to load content: ${error.message}. Please try again later.</p>`;
             }
 
             // Bind global event listeners
             dom.navLinks.forEach(link => {
-                link.addEventListener('click', e => { 
-                    e.preventDefault(); 
+                link.addEventListener('click', e => {  
+                    e.preventDefault();  
                     const viewId = `${link.id.split('-')[1]}-view`;
-                    actions.showView(viewId); 
-                    dom.searchInput.value = ''; 
+                    actions.showView(viewId);  
+                    dom.searchInput.value = '';  
                 });
             });
 
@@ -1272,7 +1548,7 @@
                 if (catBtn) {
                     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('ring-2', 'ring-violet-500'));
                     catBtn.classList.add('ring-2', 'ring-violet-500');
-                    state.filters.category = catBtn.dataset.category; 
+                    state.filters.category = catBtn.dataset.category;  
                     renderers.applyFiltersAndRender();
                 }
             });
@@ -1283,8 +1559,7 @@
                 }
             });
             
-            // This will be called after initial book data is loaded by initializeApp
-            // actions.showView('home-view'); // Removed as initializeApp now calls renderers.homePage
+            // Removed direct showView('home-view') call, it is now handled after data fetch
         };
 
         window.onload = initializeApp;
