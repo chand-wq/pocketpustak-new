@@ -8,7 +8,18 @@ from google.cloud import storage
 import razorpay
 import traceback
 from urllib.parse import unquote
-import logging # <--- NEW: ADD THIS IMPORT
+import logging
+import dotenv
+
+# --- CONDITIONAL LOGIC FOR LOCAL DEVELOPMENT ---
+# Cloud Run automatically sets the K_SERVICE environment variable.
+# We check for its absence to load the .env file only when running locally.
+if os.environ.get('K_SERVICE') is None:
+    dotenv.load_dotenv()
+    # Note: On Cloud Run, this will not be executed.
+    # We use logger for consistency.
+    logging.info("Running locally - .env file loaded.")
+
 
 # --- Configure logging at the top of your file ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,12 +54,10 @@ except Exception as e:
     stt_client = None
 
 try:
-    # This correctly uses Application Default Credentials on Cloud Run
     storage_client = storage.Client()
     gcs_bucket = storage_client.bucket(GCS_BUCKET_NAME)
     logger.info(f"Google Cloud Storage client initialized for bucket: {GCS_BUCKET_NAME}")
 except Exception as e:
-    # CRITICAL CHANGE: This will capture the full stack trace and exception details
     logger.error("Error initializing Google Cloud Storage client. Please check authentication and bucket name.", exc_info=True)
     storage_client = None
     gcs_bucket = None
@@ -400,7 +409,4 @@ def verify_razorpay_payment():
         return jsonify({'error': 'Payment verification failed.'}), 500
 
 if __name__ == '__main__':
-    # For local development, you might set environment variables like this:
-    # os.environ['RAZORPAY_KEY_ID'] = 'rzp_test_WprqVAEObL47N8'
-    # os.environ['RAZORPAY_KEY_SECRET'] = 'YOUR_RAZORPAY_SECRET_KEY_HERE'
     app.run(debug=True, port=5500)
