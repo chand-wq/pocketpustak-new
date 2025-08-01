@@ -5,3 +5,4 @@ google-cloud-speech
 google-cloud-storage  
 gunicorn 
 urllib3
+python-dotenv
